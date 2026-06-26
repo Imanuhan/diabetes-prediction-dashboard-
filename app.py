@@ -185,7 +185,7 @@ section[data-testid="stSidebar"] .stRadio label:hover { background-color: rgba(2
 # =============================================================================
 @st.cache_data
 def load_data():
-    df = pd.read_csv(DATA_PATH, sep=";")
+df = pd.read_csv(DATA_PATH)
     return df
 
 @st.cache_resource
