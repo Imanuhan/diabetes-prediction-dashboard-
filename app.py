@@ -22,8 +22,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-ARTIFACT_DIR = "artifacts"
-DATA_PATH = "data/Diabetes_Prediction.csv"
+ARTIFACT_DIR = "."
+DATA_PATH = "Diabetes_Prediction.csv"
 
 # =============================================================================
 # CSS KUSTOM — palet warna & tipografi
