@@ -190,7 +190,24 @@ def load_data():
 
 @st.cache_resource
 def load_model():
-    return joblib.load(f"{ARTIFACT_DIR}/rf_model.pkl")
+    import os
+    from sklearn.ensemble import RandomForestClassifier
+    model_path = f"{ARTIFACT_DIR}/rf_model.pkl"
+    if os.path.exists(model_path):
+        try:
+            return joblib.load(model_path)
+        except Exception:
+            pass
+    # Retrain jika model tidak bisa diload
+    df_train = pd.read_csv(DATA_PATH)
+    X = df_train.drop("diabetes", axis=1)
+    for col in ["gender", "smoking_history"]:
+        X[col] = X[col].astype("category").cat.codes
+    y = df_train["diabetes"]
+    model = RandomForestClassifier(n_estimators=100, random_state=42, class_weight="balanced")
+    model.fit(X, y)
+    joblib.dump(model, model_path)
+    return model
 
 @st.cache_resource
 def load_feature_columns():
