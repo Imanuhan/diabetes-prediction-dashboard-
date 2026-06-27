@@ -124,7 +124,7 @@ section[data-testid="stSidebar"] * { color: #F0FAF9 !important; }
 @st.cache_data
 def load_data():
     df = pd.read_csv(DATA_PATH)
-    return df.sample(min(20000, len(df)), random_state=42)
+    return df
 
 @st.cache_resource
 def load_model():
