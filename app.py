@@ -283,7 +283,7 @@ def render_beranda():
 # =============================================================================
 def render_eda():
     st.markdown('<div class="section-title">Eksplorasi Data (EDA)</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-desc">Pahami pola dan sebaran data. Gunakan filter di bawah untuk menjelajahi data.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-desc">Pahami pola dan sebaran data.</div>', unsafe_allow_html=True)
 
     f1, f2 = st.columns(2)
     with f1:
@@ -294,54 +294,56 @@ def render_eda():
     fdf = df[(df["gender"].isin(gender_filter)) & (df["age"].between(age_range[0], age_range[1]))]
     st.caption(f"Menampilkan {len(fdf):,} dari {len(df):,} total data.")
 
-    c1, c2 = st.columns(2)
-    with c1:
-        counts = fdf["diabetes"].map({0: "Tidak Diabetes", 1: "Diabetes"}).value_counts().reset_index()
-        counts.columns = ["Status", "Jumlah"]
-        fig = px.pie(counts, names="Status", values="Jumlah", hole=0.55,
-                     color="Status", color_discrete_map={"Tidak Diabetes": "#0E7C7B", "Diabetes": "#D64550"},
-                     title="Proporsi Status Diabetes")
-        fig.update_layout(font_family="Plus Jakarta Sans", legend_title_text="")
-        st.plotly_chart(fig, use_container_width=True)
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Distribusi", "📈 Scatter & Korelasi", "🚬 Merokok", "📋 Data Mentah"])
 
-    with c2:
-        fig2 = px.histogram(fdf, x="age", color=fdf["diabetes"].map({0: "Tidak Diabetes", 1: "Diabetes"}),
-                            nbins=30, barmode="overlay", opacity=0.75,
-                            color_discrete_map={"Tidak Diabetes": "#0E7C7B", "Diabetes": "#D64550"},
-                            title="Distribusi Usia berdasarkan Status Diabetes",
-                            labels={"age": "Usia", "color": "Status"})
-        fig2.update_layout(font_family="Plus Jakarta Sans")
-        st.plotly_chart(fig2, use_container_width=True)
+    with tab1:
+        c1, c2 = st.columns(2)
+        with c1:
+            counts = fdf["diabetes"].map({0: "Tidak Diabetes", 1: "Diabetes"}).value_counts().reset_index()
+            counts.columns = ["Status", "Jumlah"]
+            fig = px.pie(counts, names="Status", values="Jumlah", hole=0.55,
+                         color="Status", color_discrete_map={"Tidak Diabetes": "#0E7C7B", "Diabetes": "#D64550"},
+                         title="Proporsi Status Diabetes")
+            fig.update_layout(font_family="Plus Jakarta Sans", legend_title_text="")
+            st.plotly_chart(fig, use_container_width=True)
+        with c2:
+            fig2 = px.histogram(fdf, x="age", color=fdf["diabetes"].map({0: "Tidak Diabetes", 1: "Diabetes"}),
+                                nbins=30, barmode="overlay", opacity=0.75,
+                                color_discrete_map={"Tidak Diabetes": "#0E7C7B", "Diabetes": "#D64550"},
+                                title="Distribusi Usia berdasarkan Status Diabetes",
+                                labels={"age": "Usia", "color": "Status"})
+            fig2.update_layout(font_family="Plus Jakarta Sans")
+            st.plotly_chart(fig2, use_container_width=True)
 
-    c3, c4 = st.columns(2)
-    with c3:
-        sample = fdf.sample(min(3000, len(fdf)), random_state=42) if len(fdf) > 0 else fdf
-        fig3 = px.scatter(sample, x="bmi", y="blood_glucose_level",
-                          color=sample["diabetes"].map({0: "Tidak Diabetes", 1: "Diabetes"}),
-                          color_discrete_map={"Tidak Diabetes": "#0E7C7B", "Diabetes": "#D64550"},
-                          opacity=0.5, title="BMI vs Kadar Gula Darah",
-                          labels={"bmi": "BMI", "blood_glucose_level": "Gula Darah", "color": "Status"})
-        fig3.update_layout(font_family="Plus Jakarta Sans")
-        st.plotly_chart(fig3, use_container_width=True)
+    with tab2:
+        c3, c4 = st.columns(2)
+        with c3:
+            sample = fdf.sample(min(3000, len(fdf)), random_state=42) if len(fdf) > 0 else fdf
+            fig3 = px.scatter(sample, x="bmi", y="blood_glucose_level",
+                              color=sample["diabetes"].map({0: "Tidak Diabetes", 1: "Diabetes"}),
+                              color_discrete_map={"Tidak Diabetes": "#0E7C7B", "Diabetes": "#D64550"},
+                              opacity=0.5, title="BMI vs Kadar Gula Darah",
+                              labels={"bmi": "BMI", "blood_glucose_level": "Gula Darah", "color": "Status"})
+            fig3.update_layout(font_family="Plus Jakarta Sans")
+            st.plotly_chart(fig3, use_container_width=True)
+        with c4:
+            num_cols = ["age", "hypertension", "heart_disease", "bmi", "HbA1c_level", "blood_glucose_level", "diabetes"]
+            corr = fdf[num_cols].corr().round(2) if len(fdf) > 1 else df[num_cols].corr().round(2)
+            fig4 = px.imshow(corr, text_auto=True, color_continuous_scale=["#FFFFFF", "#0E7C7B"],
+                             title="Korelasi Antar Fitur Numerik")
+            fig4.update_layout(font_family="Plus Jakarta Sans")
+            st.plotly_chart(fig4, use_container_width=True)
 
-    with c4:
-        num_cols = ["age", "hypertension", "heart_disease", "bmi", "HbA1c_level", "blood_glucose_level", "diabetes"]
-        corr = fdf[num_cols].corr().round(2) if len(fdf) > 1 else df[num_cols].corr().round(2)
-        fig4 = px.imshow(corr, text_auto=True, color_continuous_scale=["#FFFFFF", "#0E7C7B"],
-                         title="Korelasi Antar Fitur Numerik")
-        fig4.update_layout(font_family="Plus Jakarta Sans")
-        st.plotly_chart(fig4, use_container_width=True)
+    with tab3:
+        smoke = fdf.groupby(["smoking_history"])["diabetes"].mean().reset_index()
+        smoke.columns = ["Riwayat Merokok", "Proporsi Diabetes"]
+        fig5 = px.bar(smoke.sort_values("Proporsi Diabetes", ascending=False),
+                      x="Riwayat Merokok", y="Proporsi Diabetes",
+                      color="Proporsi Diabetes", color_continuous_scale=["#E6F4F3", "#0E7C7B"])
+        fig5.update_layout(font_family="Plus Jakarta Sans", yaxis_tickformat=".0%")
+        st.plotly_chart(fig5, use_container_width=True)
 
-    st.markdown('<div class="section-title" style="margin-top:0.5rem;">Sebaran Riwayat Merokok vs Diabetes</div>', unsafe_allow_html=True)
-    smoke = fdf.groupby(["smoking_history"])["diabetes"].mean().reset_index()
-    smoke.columns = ["Riwayat Merokok", "Proporsi Diabetes"]
-    fig5 = px.bar(smoke.sort_values("Proporsi Diabetes", ascending=False),
-                  x="Riwayat Merokok", y="Proporsi Diabetes",
-                  color="Proporsi Diabetes", color_continuous_scale=["#E6F4F3", "#0E7C7B"])
-    fig5.update_layout(font_family="Plus Jakarta Sans", yaxis_tickformat=".0%")
-    st.plotly_chart(fig5, use_container_width=True)
-
-    with st.expander("Lihat contoh data mentah"):
+    with tab4:
         st.dataframe(fdf.head(50), use_container_width=True)
 
 
