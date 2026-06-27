@@ -24,6 +24,10 @@ st.set_page_config(
 
 ARTIFACT_DIR = "."
 DATA_PATH = "Diabetes_Prediction.csv"
+@st.cache_data
+def load_data():
+    df = pd.read_csv(DATA_PATH)
+    return df.sample(min(20000, len(df)), random_state=42)
 
 # =============================================================================
 # CSS KUSTOM — palet warna & tipografi
@@ -380,7 +384,7 @@ def render_eda():
                       color="Status", color_discrete_map={"Tidak Diabetes": "#0E7C7B", "Diabetes": "#D64550"},
                       title="Proporsi Status Diabetes")
         fig.update_layout(font_family="Plus Jakarta Sans", legend_title_text="")
-        st.plotly_chart(fig, width="stretch")
+       st.plotly_chart(fig, use_container_width=True)
 
     with c2:
         fig2 = px.histogram(fdf, x="age", color=fdf["diabetes"].map({0: "Tidak Diabetes", 1: "Diabetes"}),
@@ -457,7 +461,7 @@ def render_model():
                           y=["Aktual: Tidak", "Aktual: Diabetes"],
                           title="Confusion Matrix")
         fig.update_layout(font_family="Plus Jakarta Sans")
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
         st.markdown("""
         <div class="info-box">
         <b>Cara baca:</b> baris menunjukkan kondisi sebenarnya, kolom menunjukkan hasil prediksi model.
