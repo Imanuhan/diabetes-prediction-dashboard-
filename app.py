@@ -153,14 +153,27 @@ def load_json(name):
     with open(f"{ARTIFACT_DIR}/{name}") as f:
         return json.load(f)
 
-df = load_data()
-model = load_model()
-feature_columns = load_feature_columns()
-encoders = load_json("encoders.json")
-metrics = load_json("metrics.json")
-cm = load_json("confusion_matrix.json")
-roc_data = load_json("roc_curve.json")
-feature_importance = load_json("feature_importance.json")
+# Pre-compute semua data chart saat startup
+@st.cache_data
+def precompute_charts(data):
+    # Distribusi
+    counts = data["diabetes"].map({0: "Tidak Diabetes", 1: "Diabetes"}).value_counts().reset_index()
+    counts.columns = ["Status", "Jumlah"]
+    
+    # Sample scatter
+    sample = data.sample(min(1000, len(data)), random_state=42)
+    
+    # Korelasi
+    num_cols = ["age", "hypertension", "heart_disease", "bmi", "HbA1c_level", "blood_glucose_level", "diabetes"]
+    corr = data[num_cols].corr().round(2)
+    
+    # Merokok
+    smoke = data.groupby("smoking_history")["diabetes"].mean().reset_index()
+    smoke.columns = ["Riwayat Merokok", "Proporsi Diabetes"]
+    
+    return counts, sample, corr, smoke
+
+counts_data, sample_data, corr_data, smoke_data = precompute_charts(df)
 
 FRIENDLY_NAMES = {
     "gender": "Jenis Kelamin",
